@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="padding_top">8dp</dimen>
+    <dimen name="margin_top">16dp</dimen>
+    <dimen name="padding_end">16dp</dimen>
+    <dimen name="padding_start">16dp</dimen>
+    <dimen name="layout_width_100dp">100dp</dimen>
+    <dimen name="box_text_size">24sp</dimen>
+    <dimen name="padding_extra_small">4dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">32dp</dimen>
+    <dimen name="padding_extra_large">64dp</dimen>
+
+    <dimen name="small_0dp">0dp</dimen>
+    <dimen name="small_1dp">1dp</dimen>
+    <dimen name="small_4dp">4dp</dimen>
+    <dimen name="small_8dp">8dp</dimen>
+    <dimen name="small_10dp">10dp</dimen>
+    <dimen name="small_12dp">12dp</dimen>
+    <dimen name="small_16dp">16dp</dimen>
+    <dimen name="small_14dp">14dp</dimen>
+    <dimen name="small_20dp">20dp</dimen>
+    <dimen name="small_24dp">24dp</dimen>
+    <dimen name="small_28dp">28dp</dimen>
+
+    <dimen name="normal_32dp">30dp</dimen>
+    <dimen name="normal_36dp">36dp</dimen>
+    <dimen name="normal_40dp">40dp</dimen>
+    <dimen name="normal_44dp">44dp</dimen>
+    <dimen name="normal_48dp">48dp</dimen>
+    <dimen name="normal_52dp">52dp</dimen>
+    <dimen name="normal_54dp">54dp</dimen>
+    <dimen name="normal_58dp">58dp</dimen>
+
+    <dimen name="large_60dp">60dp</dimen>
+    <dimen name="large_62dp">62dp</dimen>
+    <dimen name="large_64dp">64dp</dimen>
+    <dimen name="large_68dp">68dp</dimen>
+    <dimen name="large_70dp">70dp</dimen>
+    <dimen name="large_72dp">72dp</dimen>
+    <dimen name="large_76dp">76dp</dimen>
+    <dimen name="large_80dp">80dp</dimen>
+    <dimen name="large_82dp">82dp</dimen>
+    <dimen name="large_86dp">86dp</dimen>
+    <dimen name="large_90dp">90dp</dimen>
+    <dimen name="large_92dp">92dp</dimen>
+    <dimen name="large_94dp">94dp</dimen>
+    <dimen name="large_96dp">96dp</dimen>
+    <dimen name="large_98dp">98dp</dimen>
+    <dimen name="large_100dp">100dp</dimen>
+    <dimen name="large_120dp">120dp</dimen>
+    <dimen name="large_130dp">130dp</dimen>
+    <dimen name="large_160dp">160dp</dimen>
+    <dimen name="large_200dp">200dp</dimen>
+    <dimen name="large_240dp">240dp</dimen>
+    <dimen name="large_400dp">400dp</dimen>
+    <dimen name="large_110dp">110dp</dimen>
+    <dimen name="large_300dp">300dp</dimen>
+
+    <dimen name="text_size_12sp">12sp</dimen>
+    <dimen name="text_size_14sp">14sp</dimen>
+    <dimen name="text_size_16sp">16sp</dimen>
+    <dimen name="text_size_18sp">18sp</dimen>
+    <dimen name="text_size_20sp">20sp</dimen>
+    <dimen name="text_size_24sp">24sp</dimen>
+    <dimen name="text_size_28sp">28sp</dimen>
+    <dimen name="text_size_30sp">30sp</dimen>
+    <dimen name="text_size_35sp">35sp</dimen>
+    <dimen name="text_size_40sp">40sp</dimen>
+    <dimen name="text_size_45sp">45sp</dimen>
+    <dimen name="text_size_50sp">50sp</dimen>
+</resources>

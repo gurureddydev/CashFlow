@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "678723335800",
+    "project_id": "cash-flow-a7d25",
+    "storage_bucket": "cash-flow-a7d25.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678723335800:android:a6a267200cb615e7015f8d",
+        "android_client_info": {
+          "package_name": "com.guru.cashflow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "678723335800-92cge3h0ajhhncah316v38e2ab9el6ac.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFnDEnSO4cw5dAB70aXcqVdmfEoMly7sw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "678723335800-92cge3h0ajhhncah316v38e2ab9el6ac.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
