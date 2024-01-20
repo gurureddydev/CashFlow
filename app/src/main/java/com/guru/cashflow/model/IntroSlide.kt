@@ -1,6 +1,6 @@
-package com.guru.cashflow
+package com.guru.cashflow.model
 
-data class IntroSlide (
+data class IntroSlide(
     val title: String,
     val description: String,
     val icon: String

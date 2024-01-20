@@ -1,8 +1,9 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import android.app.DatePickerDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.core.content.ContextCompat
 import com.facebook.ads.*
@@ -12,11 +13,14 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
+import com.guru.cashflow.categories.CategoryOptions
+import com.guru.cashflow.R
+import com.guru.cashflow.model.TransactionModel
+import com.guru.cashflow.util.showSnackBar
+import com.guru.cashflow.util.showToast
 import java.util.*
 
 class InsertionActivity : AppCompatActivity() {
-
-    var interstitialAd: InterstitialAd? = null
 
     private lateinit var etTitle: EditText
     private lateinit var etCategory: AutoCompleteTextView
@@ -67,7 +71,8 @@ class InsertionActivity : AppCompatActivity() {
 
         //---category menu dropdown---
         etCategory = findViewById(R.id.category)
-        val listExpense = CategoryOptions.expenseCategory() //getting the arrayList data from CategoryOptions file
+        val listExpense =
+            CategoryOptions.expenseCategory() //getting the arrayList data from CategoryOptions file
         val expenseAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listExpense)
         etCategory.setAdapter(expenseAdapter)
         //------
@@ -93,7 +98,7 @@ class InsertionActivity : AppCompatActivity() {
         //-----
 
         //---date picker---
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
+        val sdf = java.text.SimpleDateFormat(getString(R.string.dd_mm_yyyy), Locale.ENGLISH)
         val currentDate = sdf.parse(sdf.format(System.currentTimeMillis())) //take current date
         date = currentDate!!.time //initialized date value to current date as the default value
         etDate.setOnClickListener {
@@ -106,62 +111,9 @@ class InsertionActivity : AppCompatActivity() {
             if (!isSubmitted){
                 saveTransactionData()
             }else{
-                Snackbar.make(findViewById(android.R.id.content), "You have saved the transaction data", Snackbar.LENGTH_LONG).show()
+                findViewById<View>(android.R.id.content).showSnackBar(getString(R.string.transaction_data))
             }
-
         }
-
-        interstitialAd = InterstitialAd(this, "409895110892880_409895140892877")
-        val interstitialAdListener: InterstitialAdListener = object : InterstitialAdListener {
-            override fun onError(p0: Ad?, p1: AdError?) {
-
-            }
-
-            override fun onAdLoaded(p0: Ad?) {
-                showInterstitial()
-            }
-
-            override fun onAdClicked(p0: Ad?) {
-
-            }
-
-            override fun onLoggingImpression(p0: Ad?) {
-
-            }
-
-            override fun onInterstitialDisplayed(p0: Ad?) {
-
-            }
-
-            override fun onInterstitialDismissed(p0: Ad?) {
-
-            }
-
-
-        }
-
-        interstitialAd!!.loadAd(
-            interstitialAd!!.buildLoadAdConfig()
-                .withAdListener(interstitialAdListener)
-                .build()
-        )
-
-    }
-
-    private fun showInterstitial(){
-        if (interstitialAd!!.isAdLoaded){
-            interstitialAd!!.show()
-        }
-        else{
-            interstitialAd!!.loadAd()
-        }
-    }
-
-    override fun onDestroy() {
-        if (interstitialAd!!.isAdLoaded) {
-            interstitialAd!!.show()
-        }
-        super.onDestroy()
     }
 
     private fun setBackgroundColor() {
@@ -206,7 +158,7 @@ class InsertionActivity : AppCompatActivity() {
                 etDate.text = null
                 etDate.hint = selectedDate
 
-                val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
+                val sdf = java.text.SimpleDateFormat(getString(R.string.dd_mm_yyyy), Locale.ENGLISH)
                 val theDate = sdf.parse(selectedDate)
                 date = theDate!!.time //convert date to millisecond
 
@@ -239,10 +191,10 @@ class InsertionActivity : AppCompatActivity() {
 
             dbRef.child(transactionID).setValue(transaction)
                 .addOnCompleteListener {
-                    Toast.makeText(this, "Data Inserted Successfully", Toast.LENGTH_LONG).show()
+                    showToast("Data Inserted Successfully")
                     finish()
                 }.addOnFailureListener { err ->
-                    Toast.makeText(this, "Error ${err.message}", Toast.LENGTH_LONG).show()
+                    showToast("Error ${err.message}")
                 }
 
             isSubmitted = true

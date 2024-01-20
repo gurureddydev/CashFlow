@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import android.content.ContentValues
 import android.content.Intent

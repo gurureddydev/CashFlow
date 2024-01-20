@@ -2,26 +2,54 @@ package com.guru.cashflow.fragments
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.Spinner
+import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.Query
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.ktx.Firebase
-import com.guru.cashflow.TransactionAdapter
-import com.guru.cashflow.TransactionDetails
-import com.guru.cashflow.TransactionModel
-import java.util.*
 import com.guru.cashflow.R
-import kotlin.collections.ArrayList
+import com.guru.cashflow.activity.TransactionDetails
+import com.guru.cashflow.adapter.TransactionAdapter
+import com.guru.cashflow.model.TransactionModel
+import com.guru.cashflow.util.Constants.MILLIS_IN_A_DAY
+import java.util.Calendar
+import java.util.Date
+import java.util.TimeZone
 
 class TransactionFragment : Fragment() {
+    companion object {
+        private const val ALL_TYPE = "All Type"
+        private const val EXPENSE = "Expense"
+        private const val INCOME = "Income"
+        private const val ALL_TIME = "All Time"
+        private const val THIS_MONTH = "This Month"
+        private const val THIS_WEEK = "This Week"
+        private const val TODAY = "Today"
+        private const val EXTRA_TRANSACTION_ID = "transactionID"
+        private const val EXTRA_TYPE = "type"
+        private const val EXTRA_TITLE = "title"
+        private const val EXTRA_CATEGORY = "category"
+        private const val EXTRA_AMOUNT = "amount"
+        private const val EXTRA_DATE = "date"
+        private const val EXTRA_NOTE = "note"
+    }
+
     private lateinit var transactionRecyclerView: RecyclerView
     private lateinit var tvNoData: TextView
     private lateinit var noDataImage: ImageView
@@ -30,14 +58,14 @@ class TransactionFragment : Fragment() {
     private lateinit var shimmerLoading: ShimmerFrameLayout
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var transactionList: ArrayList<TransactionModel>
-    private lateinit var dbRef: DatabaseReference
-    private val user = Firebase.auth.currentUser
     private lateinit var typeOption: Spinner
     private lateinit var timeSpanOption: Spinner
-    private var selectedType: String = "All Type"//default is all type
-    private var selectedTimeSpan: String = "All Time" //default is all time
-    var dateStart: Long = 0
-    var dateEnd: Long = 0
+    private lateinit var dbRef: DatabaseReference
+    private val user = Firebase.auth.currentUser
+    private var selectedType: String = ALL_TYPE
+    private var selectedTimeSpan: String = ALL_TIME
+    private var dateStart: Long = 0
+    private var dateEnd: Long = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,20 +79,14 @@ class TransactionFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initializeItems()
-
         showUserName()
-
-        exportButtonClicked()
-
-        visibilityOptions() //visibility option spinner
-
-
+        visibilityOptions()
         //--Recycler View transaction items--
         transactionRecyclerView = view.findViewById(R.id.rvTransaction)
         transactionRecyclerView.layoutManager = LinearLayoutManager(this.activity)
         transactionRecyclerView.setHasFixedSize(true)
 
-        transactionList = arrayListOf<TransactionModel>()
+        transactionList = arrayListOf()
 
         getTransactionData()
 
@@ -73,31 +95,19 @@ class TransactionFragment : Fragment() {
             getTransactionData()
             swipeRefreshLayout.isRefreshing = false
         }
-        //----
     }
-
-    private fun exportButtonClicked() {
-//        exportButton.setOnClickListener {
-//            val intent = Intent(this@TransactionFragment.activity, ExportData::class.java)
-//            startActivity(intent)
-//        }
-    }
-
     private fun initializeItems() {
         tvNoData = requireView().findViewById(R.id.tvNoData)
         noDataImage = requireView().findViewById(R.id.noDataImage)
         tvNoDataTitle = requireView().findViewById(R.id.tvNoDataTitle)
         tvVisibilityNoData = requireView().findViewById(R.id.visibilityNoData)
         shimmerLoading = requireView().findViewById(R.id.shimmerFrameLayout)
-//        exportButton = requireView().findViewById(R.id.exportButton)
     }
-
     private fun showUserName() {
         user?.reload()
         val tvUserName: TextView = requireView().findViewById(R.id.userNameTV)
-        val email = user!!.email
-        val userName = user.displayName
-
+        val email = user?.email
+        val userName = user?.displayName
 
         val name = if (userName == null || userName == "") {
             val splitValue = email?.split("@")
@@ -106,67 +116,63 @@ class TransactionFragment : Fragment() {
             userName
         }
 
-        tvUserName.text = "Hi, ${name}!"
+        val greetingText = getString(R.string.greeting_message, name)
+        tvUserName.text = greetingText
     }
+    private fun setupSpinner(
+        spinner: Spinner,
+        itemList: Array<String>,
+        onItemSelectedAction: (String) -> Unit
+    ) {
+        val adapter = ArrayAdapter(this.requireActivity(), R.layout.selected_spinner, itemList)
+        adapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
+        spinner.adapter = adapter
 
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selectedItem = itemList[position]
+                onItemSelectedAction(selectedItem)
+                getTransactionData()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Handle the case where nothing is selected if needed
+            }
+        }
+    }
+    private fun setupTypeSpinner() {
+        val typeList = arrayOf(ALL_TYPE, EXPENSE, INCOME)
+        setupSpinner(typeOption, typeList) { selectedType = it }
+    }
+    private fun setupTimeSpanSpinner() {
+        val timeSpanList = arrayOf(ALL_TIME, THIS_MONTH, THIS_WEEK, TODAY)
+        setupSpinner(timeSpanOption, timeSpanList) {
+            selectedTimeSpan = it
+            handleTimeSpanSelection(it)
+        }
+    }
+    private fun handleTimeSpanSelection(selectedTimeSpan: String) {
+        when (selectedTimeSpan) {
+            THIS_MONTH -> getRangeDate(Calendar.DAY_OF_MONTH)
+            THIS_WEEK -> getRangeDate(Calendar.DAY_OF_WEEK)
+            TODAY -> {
+                dateStart = System.currentTimeMillis()
+                dateEnd = System.currentTimeMillis()
+            }
+        }
+    }
     private fun visibilityOptions() {
-        typeOption = requireView().findViewById(R.id.typeSpinner) as Spinner
-        val typeList = arrayOf("All Type", "Expense", "Income")
-        //typeOption.adapter = ArrayAdapter<String>(this.requireActivity(),android.R.layout.simple_list_item_1,options)
-        val typeSpinnerAdapter =
-            ArrayAdapter<String>(this.requireActivity(), R.layout.selected_spinner, typeList)
-        typeSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
-        typeOption.adapter = typeSpinnerAdapter
+        typeOption = requireView().findViewById(R.id.typeSpinner)
+        timeSpanOption = requireView().findViewById(R.id.timeSpanSpinner)
 
-        timeSpanOption = requireView().findViewById(R.id.timeSpanSpinner) as Spinner
-        val timeSpanList = arrayOf("All Time", "This Month", "This Week", "Today")
-        val timeSpanAdapter =
-            ArrayAdapter<String>(this.requireActivity(), R.layout.selected_spinner, timeSpanList)
-        timeSpanAdapter.setDropDownViewResource(android.R.layout.simple_list_item_1)
-        timeSpanOption.adapter = timeSpanAdapter
-
-        typeOption.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                when (typeList[p2]) {
-                    "All Type" -> selectedType = "All Type"
-                    "Expense" -> selectedType = "Expense"
-                    "Income" -> selectedType = "Income"
-                }
-                getTransactionData()
-            }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                TODO("Not yet implemented")
-            }
-        }
-
-        timeSpanOption.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                when (timeSpanList[p2]) {
-                    "All Time" -> selectedTimeSpan = "All Time"
-                    "This Month" -> {
-                        selectedTimeSpan = "This Month"
-                        getRangeDate(Calendar.DAY_OF_MONTH)
-                    }
-                    "This Week" -> {
-                        selectedTimeSpan = "This Week"
-                        getRangeDate(Calendar.DAY_OF_WEEK)
-                    }
-                    "Today" -> {
-                        selectedTimeSpan = "Today"
-                        dateStart = System.currentTimeMillis()
-                        dateEnd = System.currentTimeMillis()
-                    }
-                }
-                getTransactionData()
-            }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                TODO("Not yet implemented")
-            }
-        }
+        setupTypeSpinner()
+        setupTimeSpanSpinner()
     }
-
     private fun getRangeDate(rangeType: Int) {
         val currentDate = Date()
         val cal: Calendar = Calendar.getInstance(TimeZone.getDefault())
@@ -182,124 +188,122 @@ class TransactionFragment : Fragment() {
         val endDate = cal.time
         dateEnd = endDate.time //convert to millis
     }
+    private fun getSelectedTypeFilter(): (TransactionModel) -> Boolean {
+        return when (selectedType) {
+            ALL_TYPE -> { _ -> true }
+            EXPENSE -> { transaction -> transaction.type == 1 }
+            INCOME -> { transaction -> transaction.type == 2 }
+            else -> throw IllegalArgumentException("Invalid selectedType: $selectedType")
+        }
+    }
+    private fun filterByTimeSpan(transaction: TransactionModel): Boolean {
+        return selectedTimeSpan == ALL_TIME || (
+                transaction.date!! > dateStart - MILLIS_IN_A_DAY &&
+                        transaction.date!! <= dateEnd
+                )
+    }
+    private fun setupTransactionList(snapshot: DataSnapshot) {
+        transactionList.clear()
 
-    private fun getTransactionData() {
+        val typeFilter = getSelectedTypeFilter()
+
+        for (transactionSnap in snapshot.children) {
+            val transactionData = transactionSnap.getValue(TransactionModel::class.java)
+
+            if (transactionData != null && typeFilter(transactionData) && filterByTimeSpan(
+                    transactionData
+                )
+            ) {
+                transactionList.add(transactionData)
+            }
+        }
+    }
+    private fun showNoDataMessage() {
+        noDataImage.visibility = View.VISIBLE
+        tvNoDataTitle.visibility = View.VISIBLE
+        tvVisibilityNoData.visibility = View.VISIBLE
+        val message = getString(R.string.no_data_message, selectedType, selectedTimeSpan)
+        tvVisibilityNoData.text = message
+    }
+    private fun showTransactionData() {
+        val mAdapter = TransactionAdapter(transactionList)
+        transactionRecyclerView.adapter = mAdapter
+
+        mAdapter.setOnItemClickListener(object : TransactionAdapter.onItemClickListener {
+            override fun onItemClick(position: Int) {
+                startTransactionDetailsActivity(position)
+            }
+        })
+        transactionRecyclerView.visibility = View.VISIBLE
+    }
+    private fun startTransactionDetailsActivity(position: Int) {
+        val intent = Intent(this@TransactionFragment.activity, TransactionDetails::class.java)
+        putTransactionExtras(intent,position)
+        startActivity(intent)
+    }
+    private fun putTransactionExtras(intent: Intent, position: Int) {
+        val transaction = transactionList[position]
+        intent.apply {
+            putExtra(EXTRA_TRANSACTION_ID, transaction.transactionID)
+            putExtra(EXTRA_TYPE, transaction.type)
+            putExtra(EXTRA_TITLE, transaction.title)
+            putExtra(EXTRA_CATEGORY, transaction.category)
+            putExtra(EXTRA_AMOUNT, transaction.amount)
+            putExtra(EXTRA_DATE, transaction.date)
+            putExtra(EXTRA_NOTE, transaction.note)
+        }
+    }
+    private fun showShimmerEffect() {
         shimmerLoading.startShimmerAnimation()
         shimmerLoading.visibility = View.VISIBLE
         tvVisibilityNoData.visibility = View.GONE
-        transactionRecyclerView.visibility = View.GONE //hide the recycler view
+        transactionRecyclerView.visibility = View.GONE
         tvNoData.visibility = View.GONE
         noDataImage.visibility = View.GONE
         tvNoDataTitle.visibility = View.GONE
+    }
+    private fun hideShimmerEffect() {
+        shimmerLoading.stopShimmerAnimation()
+        shimmerLoading.visibility = View.GONE
+    }
+    private fun handleDatabaseEmptyState() {
+        shimmerLoading.stopShimmerAnimation()
+        shimmerLoading.visibility = View.GONE
+        noDataImage.visibility = View.VISIBLE
+        tvNoDataTitle.visibility = View.VISIBLE
+        tvNoData.visibility = View.VISIBLE
+    }
 
-        val uid = user?.uid //get user id from database
+    private fun getTransactionData() {
+        showShimmerEffect()
+
+        val uid = user?.uid
         if (uid != null) {
             dbRef = FirebaseDatabase.getInstance().getReference(uid)
         }
-        val query: Query = dbRef.orderByChild("invertedDate") //sorting date descending
+
+        val query: Query = dbRef.orderByChild("invertedDate")
+
         query.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                transactionList.clear()
                 if (snapshot.exists()) {
-                    when (selectedType) {
-                        "All Type" -> { //all option selected
-                            for (transactionSnap in snapshot.children) {
-                                val transactionData =
-                                    transactionSnap.getValue(TransactionModel::class.java) //reference data class
-                                if (selectedTimeSpan == "All Time") {
-                                    transactionList.add(transactionData!!)
-                                } else {
-                                    if (transactionData!!.date!! > dateStart - 86400000 &&
-                                        transactionData.date!! <= dateEnd
-                                    ) {
-                                        transactionList.add(transactionData)
-                                    }
-                                }
-                            }
-                        }
-                        "Expense" -> { //expense option selected
-                            for (transactionSnap in snapshot.children) {
-                                val transactionData =
-                                    transactionSnap.getValue(TransactionModel::class.java) //reference data class
-                                if (transactionData!!.type == 1) { //expense type
-                                    if (selectedTimeSpan == "All Time") {
-                                        transactionList.add(transactionData)
-                                    } else {
-                                        if (transactionData.date!! > dateStart - 86400000 &&
-                                            transactionData.date!! <= dateEnd
-                                        ) {
-                                            transactionList.add(transactionData)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        "Income" -> {
-                            for (transactionSnap in snapshot.children) {
-                                val transactionData =
-                                    transactionSnap.getValue(TransactionModel::class.java) //reference data class
-                                if (transactionData!!.type == 2) { //income type
-                                    if (selectedTimeSpan == "All Time") {
-                                        transactionList.add(transactionData)
-                                    } else {
-                                        if (transactionData.date!! > dateStart - 86400000 &&
-                                            transactionData.date!! <= dateEnd
-                                        ) {
-                                            transactionList.add(transactionData)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    setupTransactionList(snapshot)
 
-                    if (transactionList.isEmpty()) { //if there is no data being displayed
-                        noDataImage.visibility = View.VISIBLE
-                        tvNoDataTitle.visibility = View.VISIBLE
-                        tvVisibilityNoData.visibility = View.VISIBLE
-                        tvVisibilityNoData.text = "There is no $selectedType data $selectedTimeSpan"
+                    if (transactionList.isEmpty()) {
+                        showNoDataMessage()
                     } else {
-                        val mAdapter = TransactionAdapter(transactionList)
-                        transactionRecyclerView.adapter = mAdapter
-
-                        mAdapter.setOnItemClickListener(object :
-                            TransactionAdapter.onItemClickListener { //item click listener and pass extra data
-                            override fun onItemClick(position: Int) {
-                                val intent = Intent(
-                                    this@TransactionFragment.activity,
-                                    TransactionDetails::class.java
-                                )
-
-                                //put extras
-                                intent.putExtra(
-                                    "transactionID",
-                                    transactionList[position].transactionID
-                                )
-                                intent.putExtra("type", transactionList[position].type)
-                                intent.putExtra("title", transactionList[position].title)
-                                intent.putExtra("category", transactionList[position].category)
-                                intent.putExtra("amount", transactionList[position].amount)
-                                intent.putExtra("date", transactionList[position].date)
-                                intent.putExtra("note", transactionList[position].note)
-                                startActivity(intent)
-                            }
-                        })
-                        transactionRecyclerView.visibility = View.VISIBLE
+                        showTransactionData()
                     }
-                    shimmerLoading.stopShimmerAnimation()
-                    shimmerLoading.visibility = View.GONE
-                } else { //if there is no data in database
-                    shimmerLoading.stopShimmerAnimation()
-                    shimmerLoading.visibility = View.GONE
-
-                    noDataImage.visibility = View.VISIBLE
-                    tvNoDataTitle.visibility = View.VISIBLE
-                    tvNoData.visibility = View.VISIBLE
+                } else {
+                    handleDatabaseEmptyState()
                 }
+
+                hideShimmerEffect()
             }
 
             override fun onCancelled(error: DatabaseError) {
                 print("Listener was cancelled")
+                hideShimmerEffect()
             }
         })
     }

@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.adapter
 
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.guru.cashflow.R
+import com.guru.cashflow.model.TransactionModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList

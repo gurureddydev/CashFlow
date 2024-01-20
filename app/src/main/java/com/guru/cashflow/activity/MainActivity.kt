@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.guru.cashflow.R
 import com.guru.cashflow.databinding.ActivityMainBinding
 import com.guru.cashflow.fragments.AccountFragment
 import com.guru.cashflow.fragments.TransactionFragment

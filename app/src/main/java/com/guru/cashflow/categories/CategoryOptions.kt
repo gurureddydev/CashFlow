@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.categories
 
 object CategoryOptions {
 

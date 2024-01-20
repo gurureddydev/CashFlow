@@ -1,15 +1,15 @@
-package com.guru.cashflow
+package com.guru.cashflow.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.guru.cashflow.model.IntroSlide
 import com.guru.cashflow.databinding.SlideItemLayoutBinding
 
 class IntroSliderAdapter(private val introSlides: List<IntroSlide>)
     : RecyclerView.Adapter<IntroSliderAdapter.IntroSlideViewHolder>(){
     var onTextPassed: ((textView: TextView) -> Unit)? = null
-    private lateinit var binding: SlideItemLayoutBinding
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IntroSlideViewHolder {
         return IntroSlideViewHolder(
@@ -28,10 +28,12 @@ class IntroSliderAdapter(private val introSlides: List<IntroSlide>)
     inner class IntroSlideViewHolder(private val binding: SlideItemLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(introSlide: IntroSlide) {
-            binding.textTitle.text = introSlide.title
-            binding.textDescription.text = introSlide.description
-            binding.imageSlideIcon.imageAssetsFolder = "images";
-            binding.imageSlideIcon.setAnimation(introSlide.icon)
+            binding.apply {
+                textTitle.text = introSlide.title
+                textDescription.text = introSlide.description
+                imageSlideIcon.imageAssetsFolder = "images";
+                imageSlideIcon.setAnimation(introSlide.icon)
+            }
             onTextPassed?.invoke(binding.textTitle)
         }
     }

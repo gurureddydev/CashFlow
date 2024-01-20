@@ -15,12 +15,13 @@ import androidx.datastore.preferences.preferencesKey
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
-import com.guru.cashflow.IntroSlide
-import com.guru.cashflow.IntroSliderAdapter
+import com.guru.cashflow.model.IntroSlide
+import com.guru.cashflow.adapter.IntroSliderAdapter
 import com.guru.cashflow.R
 import com.guru.cashflow.databinding.FragmentOnboardingBinding
 import com.google.firebase.auth.FirebaseAuth
-import com.guru.cashflow.Login
+import com.guru.cashflow.activity.Login
+import com.guru.cashflow.util.Constants
 import kotlinx.coroutines.launch
 
 class OnboardingFragment : Fragment() {
@@ -71,7 +72,7 @@ class OnboardingFragment : Fragment() {
                             R.anim.app_name_animation
                         )
                         binding?.buttonNext?.animation = animation
-                        binding?.buttonNext?.text = "Finish"
+                        binding?.buttonNext?.text = getString(R.string.finish)
                         binding?.buttonNext?.setOnClickListener {
                             lifecycleScope.launch {
                                 saveOnboarding()
@@ -90,7 +91,7 @@ class OnboardingFragment : Fragment() {
                             }
                         }
                     } else {
-                        binding?.buttonNext?.text = "Next"
+                        binding?.buttonNext?.text = getString(R.string.next)
                         binding?.buttonNext?.setOnClickListener {
                             binding?.viewPager?.currentItem?.let {
                                 binding?.viewPager?.setCurrentItem(it + 1, false)
@@ -100,13 +101,13 @@ class OnboardingFragment : Fragment() {
                 }
             }
         )
-        prefs = requireActivity().applicationContext.createDataStore(name = "preferences")
+        prefs = requireActivity().applicationContext.createDataStore(name = Constants.PREFERENCES)
     }
 
     suspend fun saveOnboarding() {
         prefs.edit {
             val oneTime = true
-            it[preferencesKey<Boolean>("onBoard")] = oneTime
+            it[preferencesKey<Boolean>(getString(R.string.onboard))] = oneTime
         }
     }
 }

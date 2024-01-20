@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -6,6 +6,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.guru.cashflow.R
+import com.guru.cashflow.util.showToast
 
 class ForgotPassword : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,16 +20,16 @@ class ForgotPassword : AppCompatActivity() {
         submitButton.setOnClickListener {
             val email: String = etEmail.text.toString().trim { it <= ' ' }
             if (email.isEmpty()){
-                Toast.makeText(this, "Please enter email address", Toast.LENGTH_LONG).show()
+                showToast(getString(R.string.please_enter_email_address))
 
             }else{
                 FirebaseAuth.getInstance().sendPasswordResetEmail(email)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful){
-                            Toast.makeText(this, "Check your email! (Including Spam)", Toast.LENGTH_LONG).show()
+                            showToast(getString(R.string.check_your_email_including_spam))
                             finish()
                         }else{
-                            Toast.makeText(this, task.exception!!.message.toString(), Toast.LENGTH_LONG).show()
+                            showToast(task.exception?.message.toString())
                         }
                     }
             }

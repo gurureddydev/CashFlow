@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import android.app.DatePickerDialog
 import android.content.DialogInterface
@@ -12,6 +12,9 @@ import com.facebook.ads.*
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
+import com.guru.cashflow.R
+import com.guru.cashflow.model.TransactionModel
+import com.guru.cashflow.categories.CategoryOptions
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,7 +26,6 @@ class TransactionDetails : AppCompatActivity() {
     private lateinit var tvNoteDetails: TextView
     private lateinit var tvCategoryDetails: TextView
     private lateinit var detailsTitle: RelativeLayout
-    private lateinit var adView: com.facebook.ads.AdView
     var interstitialAd: InterstitialAd? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,15 +54,6 @@ class TransactionDetails : AppCompatActivity() {
         setValuesToViews() //call method for output the value on db
 
 
-        adView = com.facebook.ads.AdView(
-            this,
-            "409895110892880_776674630881591",
-            com.facebook.ads.AdSize.BANNER_HEIGHT_50
-        )
-        val adContainer = findViewById<LinearLayout>(R.id.banner_container)
-        adContainer.addView(adView)
-        adView.loadAd()
-
     }
 
     private fun deleteData() {
@@ -84,7 +77,8 @@ class TransactionDetails : AppCompatActivity() {
         val user = Firebase.auth.currentUser
         val uid = user?.uid
         if (uid != null) {
-            val dbRef = FirebaseDatabase.getInstance().getReference(uid).child(transactionID) //initialize database with uid as the parent
+            val dbRef = FirebaseDatabase.getInstance().getReference(uid)
+                .child(transactionID) //initialize database with uid as the parent
             val mTask = dbRef.removeValue()
 
             mTask.addOnSuccessListener {
@@ -106,19 +100,19 @@ class TransactionDetails : AppCompatActivity() {
         detailsTitle = findViewById(R.id.transactionDetailsTitle)
     }
 
-    private fun setValuesToViews(){
+    private fun setValuesToViews() {
 
-        tvTitleDetails.text =  intent.getStringExtra("title")
-        val type: Int = intent.getIntExtra("type",0)
+        tvTitleDetails.text = intent.getStringExtra("title")
+        val type: Int = intent.getIntExtra("type", 0)
         val amount: Double = intent.getDoubleExtra("amount", 0.0)
         tvAmountDetails.text = amount.toString()
 
         if (type == 1) {
-            tvTypeDetails.text = "Expense Transaction"
+            tvTypeDetails.text = getString(R.string.expense_transaction)
             tvAmountDetails.setTextColor(Color.parseColor("#ff9f1c"))
             detailsTitle.setBackgroundResource(R.color.purple)
-        }else{
-            tvTypeDetails.text = "Income Transaction"
+        } else {
+            tvTypeDetails.text = getString(R.string.income_transaction)
             tvAmountDetails.setTextColor(Color.parseColor("#2ec4b6"))
             detailsTitle.setBackgroundResource(R.drawable.bg_details_income)
             window.statusBarColor = ContextCompat.getColor(this, R.color.toscaSecondary)
@@ -129,14 +123,14 @@ class TransactionDetails : AppCompatActivity() {
         val result = Date(date)
         tvDateDetails.text = simpleDateFormat.format(result)
 
-        tvCategoryDetails.text =  intent.getStringExtra("category")
-        tvNoteDetails.text =  intent.getStringExtra("note")
+        tvCategoryDetails.text = intent.getStringExtra("category")
+        tvNoteDetails.text = intent.getStringExtra("note")
 
     }
 
     private fun openUpdateDialog(
         title: String
-    ){
+    ) {
         val mDialog = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val mDialogView = inflater.inflate(R.layout.update_dialog, null)
@@ -156,24 +150,27 @@ class TransactionDetails : AppCompatActivity() {
         etAmount.setText(intent.getDoubleExtra("amount", 0.0).toString())
         etNote.setText(intent.getStringExtra("note")).toString()
 
-        val type: Int = intent.getIntExtra("type",0)
+        val type: Int = intent.getIntExtra("type", 0)
         val transactionID = intent.getStringExtra("transactionID") //store transaction id
 
         //set text to auto complete text view category:
         val categoryOld = (intent.getStringExtra("category"))
         etCategory.setText(categoryOld)
 
-        val listExpense = CategoryOptions.expenseCategory() //getting the arrayList data from CategoryOptions file
-        val expenseAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listExpense)
+        val listExpense =
+            CategoryOptions.expenseCategory() //getting the arrayList data from CategoryOptions file
+        val expenseAdapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listExpense)
         etCategory.setAdapter(expenseAdapter)
 
         if (type == 1) { //expense menu
             etCategory.setAdapter(expenseAdapter) //if expense type selected, the set list expense array in category menu
         }
-        if (type == 2){ //Income Menu
+        if (type == 2) { //Income Menu
             //if expense type selected, the set list income array in category menu :
             val listIncome = CategoryOptions.incomeCategory()
-            val incomeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listIncome)
+            val incomeAdapter =
+                ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listIncome)
             etCategory.setAdapter(incomeAdapter)
         }
         //-------
@@ -191,11 +188,13 @@ class TransactionDetails : AppCompatActivity() {
         var dateUpdate: Long = intent.getLongExtra("date", 0) //initialized current date value on db
         var invertedDate: Long = dateUpdate * -1
         etDate.setOnClickListener {
-            val year = cal.get(Calendar.YEAR) //set default year in datePickerDialog similar with database data
+            val year =
+                cal.get(Calendar.YEAR) //set default year in datePickerDialog similar with database data
             val month = cal.get(Calendar.MONTH)
             val day = cal.get(Calendar.DAY_OF_MONTH)
 
-            val dpd = DatePickerDialog(this,
+            val dpd = DatePickerDialog(
+                this,
                 { _, selectedYear, selectedMonth, selectedDayOfMonth ->
 
                     val selectedDate = "$selectedDayOfMonth/${selectedMonth + 1}/$selectedYear"
@@ -249,57 +248,11 @@ class TransactionDetails : AppCompatActivity() {
 
             alertDialog.dismiss()
         }
-
-        interstitialAd = InterstitialAd(this, "409895110892880_409895140892877")
-        val interstitialAdListener: InterstitialAdListener = object : InterstitialAdListener {
-            override fun onError(p0: Ad?, p1: AdError?) {
-
-            }
-
-            override fun onAdLoaded(p0: Ad?) {
-                showInterstitial()
-            }
-
-            override fun onAdClicked(p0: Ad?) {
-
-            }
-
-            override fun onLoggingImpression(p0: Ad?) {
-
-            }
-
-            override fun onInterstitialDisplayed(p0: Ad?) {
-
-            }
-
-            override fun onInterstitialDismissed(p0: Ad?) {
-
-            }
-
-
-        }
-
-        interstitialAd!!.loadAd(
-            interstitialAd!!.buildLoadAdConfig()
-                .withAdListener(interstitialAdListener)
-                .build()
-        )
-}
-
-    private fun showInterstitial(){
-        if (interstitialAd!!.isAdLoaded){
-            interstitialAd!!.show()
-        }
-        else{
-            interstitialAd!!.loadAd()
-        }
     }
 
 
-
-
     private fun updateTransactionData(
-        transactionID:String,
+        transactionID: String,
         type: Int,
         title: String,
         category: String,
@@ -307,16 +260,27 @@ class TransactionDetails : AppCompatActivity() {
         date: Long,
         note: String,
         invertedDate: Long
-    ){
+    ) {
         // --Initialize Firebase Auth and firebase database--
         val user = Firebase.auth.currentUser
         val uid = user?.uid
         if (uid != null) {
-            val dbRef = FirebaseDatabase.getInstance().getReference(uid) //initialize database with uid as the parent
-            val transactionInfo = TransactionModel(transactionID, type, title, category, amount, date, note, invertedDate)
+            val dbRef = FirebaseDatabase.getInstance()
+                .getReference(uid) //initialize database with uid as the parent
+            val transactionInfo = TransactionModel(
+                transactionID,
+                type,
+                title,
+                category,
+                amount,
+                date,
+                note,
+                invertedDate
+            )
             dbRef.child(transactionID).setValue(transactionInfo)
         }
     }
+
     override fun onDestroy() {
         if (interstitialAd != null && interstitialAd!!.isAdLoaded) {
             interstitialAd!!.show()

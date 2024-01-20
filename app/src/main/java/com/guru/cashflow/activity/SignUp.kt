@@ -1,4 +1,4 @@
-package com.guru.cashflow
+package com.guru.cashflow.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.guru.cashflow.databinding.ActivitySignUpBinding
+import com.guru.cashflow.util.showToast
 
 
 class SignUp : AppCompatActivity() {
@@ -20,11 +21,9 @@ class SignUp : AppCompatActivity() {
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         firebaseAuth = FirebaseAuth.getInstance()
 
         binding.signupBtn.setOnClickListener { //when the sign up button get click
-
             val email = binding.email.text.toString()
             val pass = binding.password.text.toString()
             val confirmPass = binding.passwordRetype.text.toString()
@@ -34,24 +33,24 @@ class SignUp : AppCompatActivity() {
                     if (pass == confirmPass){
                         binding.progressBar.visibility = View.VISIBLE //show loading progress bar
                         firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
-                            if (it.isSuccessful){ //if the sign up succesful then change activity to main activity
+                            if (it.isSuccessful){
                                 val intent = Intent(this, MainActivity::class.java)
-                                Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_LONG).show()
+                                showToast("Sign Up Successful")
                                 binding.progressBar.visibility = View.GONE
                                 startActivity(intent)
-                            }else{ // jika gagal maka tampilkan pesan error
+                            }else{
                                 binding.progressBar.visibility = View.GONE
-                                Toast.makeText(this, it.exception.toString(), Toast.LENGTH_LONG).show()
+                                showToast(it.exception.toString())
                             }
                         }
                     }else{
-                        Toast.makeText(this, "Password id not Matching", Toast.LENGTH_LONG).show()
+                        showToast("Password id not Matching")
                     }
                 }else{
-                    Toast.makeText(this, "Empty Fields Are no Allowed", Toast.LENGTH_LONG).show()
+                    showToast("Empty Fields Are no Allowed")
                 }
             }else{
-                Toast.makeText(this, "Invalid or Empty Email", Toast.LENGTH_LONG).show()
+                showToast("Invalid or Empty Email")
             }
         }
 

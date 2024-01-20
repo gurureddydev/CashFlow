@@ -5,7 +5,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".Login">
+        tools:context=".activity.Login">
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="@dimen/large_60dp"
